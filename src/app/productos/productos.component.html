@@ -1,0 +1,171 @@
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="text-primary">📦 Lista de Productos</h2>
+        <button class="btn btn-success" (click)="abrirModalCrear()">
+            <i class="bi bi-plus-circle"></i> Agregar producto
+        </button>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Filtrar por categoría</label>
+            <select class="form-select" [(ngModel)]="filtro.categoria" (change)="filtrarProductos()">
+                <option value="">Todas</option>
+                <option *ngFor="let cat of categorias" [value]="cat._id">{{ cat.nombre }}</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Stock bajo</label>
+            <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="filtro.stock_bajo"
+                    (change)="filtrarProductos()" id="stockBajoCheck">
+                <label class="form-check-label" for="stockBajoCheck">
+                    Mostrar solo productos con stock bajo
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-2">
+        <button class="btn btn-outline-secondary" (click)="limpiarFiltros()">
+            Limpiar filtros
+        </button>
+    </div>
+
+    <div class="mb-3">
+        <a routerLink="/historial" class="btn btn-outline-secondary mt-3">Ver historial de movimientos</a>
+    </div>
+    <!-- Búsqueda -->
+    <div class="mb-3">
+        <input type="text" class="form-control" placeholder="🔎 Buscar producto..." [(ngModel)]="busqueda">
+    </div>
+
+    <!-- Tabla de productos -->
+    <div class="card">
+        <div class="card-body">
+            <b>
+                <p class="text-muted">Listado de productos:</p>
+            </b>
+            <table class="table table-bordered table-striped mt-3" *ngIf="productosFiltrados.length > 0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Categoría</th>
+                        <th>Stock</th>
+                        <th>Precio</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let producto of productosFiltrados">
+                        <td>{{ producto.nombre }}</td>
+                        <td>{{ producto.descripcion }}</td>
+                        <td>{{ producto.categoria?.nombre }}</td>
+                        <td>{{ producto.stock }}</td>
+                        <td>${{ producto.precio }}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" (click)="eliminarProducto(producto._id)">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                            <button class="btn btn-warning btn-sm me-2" (click)="abrirModalEditar(producto)">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <button class="btn btn-info btn-sm me-2" (click)="abrirModalMovimiento(producto)">
+                                <i class="bi bi-arrow-left-right"></i> Movimiento
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div *ngIf="productosFiltrados.length === 0" class="alert alert-info mt-3">
+                No hay productos que coincidan con tu búsqueda o filtros aplicados.
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar o editar producto -->
+    <div class="modal fade" id="modalProducto" tabindex="-1" aria-labelledby="modalProductoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form (ngSubmit)="crearProducto()" #form="ngForm">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title" id="modalProductoLabel">
+                            {{ editando ? 'Editar producto' : 'Agregar nuevo producto' }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" class="form-control" required [(ngModel)]="nuevoProducto.nombre"
+                                name="nombre">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" [(ngModel)]="nuevoProducto.descripcion"
+                                name="descripcion"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Precio</label>
+                            <input type="number" class="form-control" required [(ngModel)]="nuevoProducto.precio"
+                                name="precio">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Stock</label>
+                            <input type="number" class="form-control" [(ngModel)]="nuevoProducto.stock" name="stock">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Categoría</label>
+                            <select class="form-select" required [(ngModel)]="nuevoProducto.categoria" name="categoria">
+                                <option *ngFor="let cat of categorias" [value]="cat._id">{{ cat.nombre }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" [disabled]="form.invalid" data-bs-dismiss="modal">
+                            {{ editando ? 'Guardar cambios' : 'Agregar' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Modal para movimiento de stock -->
+    <div class="modal fade" id="modalMovimiento" tabindex="-1" aria-labelledby="modalMovimientoLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form (ngSubmit)="registrarMovimiento()" #formMov="ngForm">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title" id="modalMovimientoLabel">Registrar Movimiento</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Producto:</strong> {{ productoSeleccionado?.nombre }}</p>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de movimiento</label>
+                            <select class="form-select" required [(ngModel)]="movimiento.tipo" name="tipo">
+                                <option value="entrada">Entrada</option>
+                                <option value="salida">Salida</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Cantidad</label>
+                            <input type="number" class="form-control" required [(ngModel)]="movimiento.cantidad"
+                                name="cantidad">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-info" data-bs-dismiss="modal">Registrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

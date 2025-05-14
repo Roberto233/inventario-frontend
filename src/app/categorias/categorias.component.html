@@ -1,0 +1,48 @@
+<div class="container mt-4">
+  <h2 class="text-primary text-center">📁 Gestión de Categorías</h2>
+
+  <div class="card mt-4">
+    <div class="card-body">
+      <form (ngSubmit)="guardarCategoria()" #form="ngForm">
+        <div class="mb-3">
+          <label class="form-label">Nombre de categoría</label>
+          <input type="text" class="form-control" required [(ngModel)]="nuevaCategoria.nombre" name="nombre">
+        </div>
+        <div class="d-flex justify-content-end">
+          <button type="submit" class="btn btn-primary me-2" [disabled]="form.invalid">
+            {{ editando ? 'Guardar cambios' : 'Agregar categoría' }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="resetFormulario()" *ngIf="editando">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <table class="table table-bordered table-striped mt-4" *ngIf="categorias.length > 0">
+    <thead class="table-dark">
+      <tr>
+        <th>Nombre</th>
+        <th class="text-center">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let categoria of categorias">
+        <td>{{ categoria.nombre }}</td>
+        <td class="text-center">
+          <button class="btn btn-warning btn-sm me-2" (click)="editarCategoria(categoria)">
+            <i class="bi bi-pencil"></i> Editar
+          </button>
+          <button class="btn btn-danger btn-sm" (click)="eliminarCategoria(categoria._id)">
+            <i class="bi bi-trash"></i> Eliminar
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="categorias.length === 0" class="alert alert-info mt-4">
+    No hay categorías registradas aún.
+  </div>
+</div>
